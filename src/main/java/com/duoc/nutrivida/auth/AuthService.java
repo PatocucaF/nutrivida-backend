@@ -1,5 +1,7 @@
 package com.duoc.nutrivida.auth;
 
+import com.duoc.nutrivida.common.ConflictException;
+import com.duoc.nutrivida.common.NotFoundException;
 import com.duoc.nutrivida.security.JwtService;
 import com.duoc.nutrivida.user.Role;
 import com.duoc.nutrivida.user.RoleName;
@@ -12,6 +14,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,48 +31,42 @@ public class AuthService {
     private final JwtService jwtService;
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail().trim())) {
-            throw new RuntimeException("El correo ya está registrado");
+        String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+
+        if (userRepository.existsByEmailIgnoreCase(email)) {
+            throw new ConflictException("El correo ya está registrado");
         }
 
-        RoleName requestedRole = RoleName.valueOf(
-                (request.getRole() == null ? "CLIENTE" : request.getRole()).trim().toUpperCase(Locale.ROOT)
-        );
-
-        Role role = roleRepository.findByName(requestedRole)
-                .orElseGet(() -> roleRepository.findByName(RoleName.CLIENTE)
-                        .orElseThrow(() -> new RuntimeException("Rol no encontrado")));
+        // El registro publico SIEMPRE crea un CLIENTE. Cambiar de rol es cosa del ADMIN.
+        Role role = roleRepository.findByName(RoleName.CLIENTE)
+                .orElseThrow(() -> new NotFoundException("Rol CLIENTE no encontrado"));
 
         User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail().trim().toLowerCase(Locale.ROOT));
+        user.setName(request.getName().trim());
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEnabled(true);
-        user.setRoles(Set.of(role));
+        user.setRoles(new HashSet<>(Set.of(role)));
 
-        User savedUser = userRepository.save(user);
-        String token = jwtService.generateToken(
-                savedUser.getEmail(),
-                savedUser.getRoles().stream().map(r -> "ROLE_" + r.getName().name()).toList()
-        );
-
-        return buildResponse(savedUser, token);
+        User saved = userRepository.save(user);
+        return buildResponse(saved, jwtService.generateToken(saved.getEmail(), authorities(saved)));
     }
 
     public AuthResponse login(AuthRequest request) {
+        String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail().trim(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(email, request.getPassword())
         );
 
-        User user = userRepository.findByEmail(request.getEmail().trim().toLowerCase(Locale.ROOT))
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
 
-        String token = jwtService.generateToken(
-                user.getEmail(),
-                user.getRoles().stream().map(r -> "ROLE_" + r.getName().name()).toList()
-        );
+        return buildResponse(user, jwtService.generateToken(user.getEmail(), authorities(user)));
+    }
 
-        return buildResponse(user, token);
+    private List<String> authorities(User user) {
+        return user.getRoles().stream().map(r -> "ROLE_" + r.getName().name()).toList();
     }
 
     private AuthResponse buildResponse(User user, String token) {
@@ -78,7 +76,6 @@ public class AuthService {
                 user.getEmail(),
                 user.getRoles().stream().map(role -> role.getName().name()).collect(Collectors.toSet())
         );
-
         return new AuthResponse(token, "Bearer", userResponse);
     }
 }
