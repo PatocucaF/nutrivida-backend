@@ -1,0 +1,12 @@
+package com.duoc.nutrivida.audit;
+
+public enum AuditAction {
+    USUARIO_CREADO,
+    USUARIO_EDITADO,
+    USUARIO_ACTIVADO,
+    USUARIO_DESACTIVADO,
+    USUARIO_ELIMINADO,
+    ROL_CAMBIADO,
+    PERFIL_EDITADO,
+    CONTRASENA_CAMBIADA
+}
