@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/sales")
-@PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+@PreAuthorize("hasRole('ADMIN')")
 public class SaleController {
 
     private final SaleRepository saleRepository;

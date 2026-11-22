@@ -27,6 +27,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @PreAuthorize("!#includeInactive or hasRole('ADMIN')")
     public List<ProductResponse> list(@RequestParam(required = false) Long categoryId,
                                       @RequestParam(defaultValue = "false") boolean includeInactive) {
         return productService.list(categoryId, includeInactive);
@@ -39,13 +40,13 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ProductResponse create(@Valid @RequestBody ProductRequest request, Authentication authentication) {
         return productService.create(request, authentication.getName());
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ProductResponse update(@PathVariable Long id, @Valid @RequestBody ProductUpdateRequest request) {
         return productService.update(id, request);
     }

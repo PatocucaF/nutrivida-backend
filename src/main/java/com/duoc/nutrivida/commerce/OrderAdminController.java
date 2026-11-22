@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/admin/orders")
-@PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
 public class OrderAdminController {
 
     private final OrderService orderService;
@@ -25,6 +24,7 @@ public class OrderAdminController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public PagedModel<OrderResponse> list(
             @ParameterObject @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         Page<OrderResponse> page = orderService.listAll(pageable);
@@ -32,11 +32,13 @@ public class OrderAdminController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public OrderResponse get(@PathVariable Long id) {
         return orderService.getAnyOrder(id);
     }
 
     @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('ADMIN')")
     public OrderResponse cancel(@PathVariable Long id, Authentication authentication) {
         return orderService.cancel(id, authentication.getName());
     }
