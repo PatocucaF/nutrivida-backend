@@ -3,7 +3,6 @@ package com.duoc.nutrivida.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -57,10 +56,8 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/h2-console",
                     "/h2-console/**",
-                    "/api/v1/auth/**"
-                ).permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/categories", "/api/v1/categories/**",
-                            "/api/v1/products", "/api/v1/products/**").permitAll()
+                        "/api/v1/auth/**"
+                    ).permitAll()
                     .anyRequest().authenticated())
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
             .authenticationProvider(authenticationProvider())

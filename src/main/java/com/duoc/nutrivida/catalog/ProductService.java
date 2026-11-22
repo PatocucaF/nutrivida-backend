@@ -38,7 +38,11 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductResponse get(Long id) {
-        return ProductResponse.from(findProduct(id));
+        Product product = findProduct(id);
+        if (!product.isActive()) {
+            throw new NotFoundException("Producto no encontrado");
+        }
+        return ProductResponse.from(product);
     }
 
     @Transactional

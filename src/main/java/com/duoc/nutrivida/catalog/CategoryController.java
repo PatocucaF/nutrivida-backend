@@ -27,19 +27,20 @@ public class CategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("!#includeInactive or hasRole('ADMIN')")
     public List<CategoryResponse> list(@RequestParam(defaultValue = "false") boolean includeInactive) {
         return categoryService.list(includeInactive);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public CategoryResponse create(@Valid @RequestBody CategoryRequest request) {
         return categoryService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public CategoryResponse update(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
         return categoryService.update(id, request);
     }
