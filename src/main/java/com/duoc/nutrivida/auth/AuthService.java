@@ -8,6 +8,7 @@ import com.duoc.nutrivida.user.RoleName;
 import com.duoc.nutrivida.user.RoleRepository;
 import com.duoc.nutrivida.user.User;
 import com.duoc.nutrivida.user.UserRepository;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -62,6 +63,28 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
 
+        return buildResponse(user, jwtService.generateToken(user.getEmail(), authorities(user)));
+    }
+
+    /**
+     * Renueva la sesion: recibe un token AUN VALIDO y entrega uno nuevo con la misma identidad
+     * y los roles actuales de la base de datos. Si el token vencio o es falso, responde 401.
+     */
+    public AuthResponse refresh(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new JwtException("Token no enviado");
+        }
+        String email;
+        try {
+            email = jwtService.extractUsername(authorizationHeader.substring(7));
+        } catch (IllegalArgumentException ex) {
+            throw new JwtException("Token vacio");
+        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new JwtException("Usuario inexistente"));
+        if (!user.isEnabled() || user.getDeletedAt() != null) {
+            throw new JwtException("Usuario desactivado");
+        }
         return buildResponse(user, jwtService.generateToken(user.getEmail(), authorities(user)));
     }
 

@@ -1,6 +1,8 @@
 package com.duoc.nutrivida.common;
 
+import io.jsonwebtoken.JwtException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -58,6 +60,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ApiError> handleDisabled(DisabledException ex) {
         return build(HttpStatus.FORBIDDEN, "La cuenta está desactivada", null);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ApiError> handleInvalidToken(JwtException ex) {
+        return build(HttpStatus.UNAUTHORIZED, "Sesión inválida o vencida", null);
+    }
+
+    // Ej.: ?sort=string (valor de ejemplo que Swagger envia por defecto) o una columna que no existe
+    @ExceptionHandler(InvalidDataAccessApiUsageException.class)
+    public ResponseEntity<ApiError> handleInvalidQuery(InvalidDataAccessApiUsageException ex) {
+        return build(HttpStatus.BAD_REQUEST,
+                "Parámetro de paginación u ordenamiento inválido. Revise page, size y sort", null);
     }
 
     private ResponseEntity<ApiError> build(HttpStatus status, String message, Map<String, String> fields) {
