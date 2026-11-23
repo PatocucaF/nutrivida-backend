@@ -1,5 +1,6 @@
 package com.duoc.nutrivida.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,10 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    // Origenes permitidos para el frontend (separados por coma). En AWS: la URL publica del frontend.
+    @Value("${app.cors.allowed-origins}")
+    private String[] allowedOrigins;
+
     public SecurityConfig(UserDetailsService userDetailsService, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
@@ -56,6 +61,8 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/h2-console",
                     "/h2-console/**",
+                    "/actuator/health",
+                    "/actuator/health/**",
                         "/api/v1/auth/**"
                     ).permitAll()
                     .anyRequest().authenticated())
@@ -69,7 +76,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of(allowedOrigins));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

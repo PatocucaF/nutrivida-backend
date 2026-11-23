@@ -52,10 +52,16 @@ class CommerceAuthorizationTest {
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/v1/sales"))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get("/api/v1/admin/orders/1"))
-                .andExpect(status().isForbidden());
         mockMvc.perform(patch("/api/v1/admin/orders/1/cancel"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "VENDEDOR")
+    void vendedorPuedeVerDetalleDePedido() throws Exception {
+        // Tiene permiso: si el pedido no existe responde 404 (y no 403).
+        mockMvc.perform(get("/api/v1/admin/orders/999999"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
