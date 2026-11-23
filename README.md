@@ -71,7 +71,8 @@ Detalle de cada endpoint (parámetros, respuestas y errores) en Swagger.
 
 ## Variables de entorno
 
-Todas son opcionales; si no se definen, se usa el valor de desarrollo.
+Las variables de RDS son obligatorias solo al activar el perfil `mysql`; por defecto
+la aplicación usa H2.
 
 | Variable | Para qué | Valor por defecto |
 |---|---|---|
@@ -80,18 +81,33 @@ Todas son opcionales; si no se definen, se usa el valor de desarrollo.
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Administrador inicial | `admin@nutrivida.cl`, `Admin12345` |
 | `CORS_ORIGINS` | URL(s) del frontend, separadas por coma | `http://localhost:5173` |
 | `DEMO_DATA` | `false` desactiva los datos de ejemplo | `true` |
-| `SPRING_PROFILES_ACTIVE` | `mysql` para usar MySQL | (H2) |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Conexión MySQL | `localhost`, `3306`, `nutrivida`, `nutrivida`, `nutrivida` |
+| `SPRING_PROFILES_ACTIVE` | `mysql` para usar AWS RDS MySQL | (H2) |
+| `AWS_DB_HOST`, `AWS_DB_PORT`, `AWS_DB_NAME`, `AWS_DB_USER`, `AWS_DB_PASSWORD` | Conexión MySQL de RDS | Host, nombre de BD, usuario y contraseña requeridos; puerto `3306` |
+| `AWS_DB_SSL_MODE` | Validación TLS del servidor | `VERIFY_IDENTITY` |
 
 ## Usar MySQL
 
+Para probar con AWS RDS, copia `.env.example` a `.env` y completa el endpoint RDS,
+el nombre de la base de datos y las credenciales. `.env` se carga al activar el perfil
+`mysql` y está excluido de Git. No guardes credenciales reales en `.env.example`.
+
 ```powershell
-docker compose up -d                                   # levanta MySQL local (opcional)
 $env:SPRING_PROFILES_ACTIVE = "mysql"
 .\mvnw.cmd spring-boot:run
 ```
 
-Con el perfil `mysql` Hibernate crea las tablas automáticamente y la información queda guardada entre reinicios.
+Para MySQL local con Docker, configura en `.env` las credenciales de `docker-compose.yml`,
+establece `AWS_DB_SSL_MODE=DISABLED` (solo para desarrollo local) y levanta el contenedor:
+
+```powershell
+docker compose up -d
+$env:SPRING_PROFILES_ACTIVE = "mysql"
+.\mvnw.cmd spring-boot:run
+```
+
+El perfil valida la conexión al iniciar, crea los roles base si faltan y Hibernate actualiza
+las tablas automáticamente. La conexión TLS verifica el certificado y el hostname del servidor
+RDS. Diagnóstico de conexión: `GET /api/v1/health/db` (responde `503` si la base no está disponible).
 
 ## Estructura
 
@@ -102,7 +118,8 @@ src/main/java/com/duoc/nutrivida
 ├── catalog    categorías, productos e inventario
 ├── commerce   carrito, pedidos y ventas
 ├── audit      registro de auditoría
+├── health     diagnóstico de conexión a la base de datos
 ├── security   JWT, filtro y reglas de acceso
-├── config     Swagger y datos de demo
+├── config     Swagger, inicialización y datos de demo
 └── common     errores y manejo global de excepciones
 ```

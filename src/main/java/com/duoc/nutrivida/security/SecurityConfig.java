@@ -63,9 +63,10 @@ public class SecurityConfig {
                     "/h2-console/**",
                     "/actuator/health",
                     "/actuator/health/**",
-                        "/api/v1/auth/**"
-                    ).permitAll()
-                    .anyRequest().authenticated())
+                    "/api/v1/health/db",
+                    "/api/v1/auth/**"
+                ).permitAll()
+                .anyRequest().authenticated())
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

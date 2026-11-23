@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, Long> {
     Page<CustomerOrder> findByCustomer_EmailOrderByCreatedAtDesc(String email, Pageable pageable);
+    Page<CustomerOrder> findByCustomer_IdOrderByCreatedAtDesc(Long customerId, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select o from CustomerOrder o where o.id = :id")

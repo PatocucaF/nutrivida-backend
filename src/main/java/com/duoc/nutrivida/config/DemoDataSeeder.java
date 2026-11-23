@@ -24,7 +24,7 @@ import java.util.Set;
 /**
  * Carga datos de ejemplo para la demo: un vendedor, un cliente, categorias y productos.
  * Es idempotente (no duplica si ya existen) y se desactiva con app.demo-data.enabled=false.
- * Se ejecuta despues de DataSeeder, que crea los roles y el administrador.
+ * Se ejecuta despues de DataInitializer y DataSeeder, que crean roles y administrador.
  */
 @Component
 @Order(2)

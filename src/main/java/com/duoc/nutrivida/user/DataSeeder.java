@@ -32,10 +32,6 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        for (RoleName roleName : RoleName.values()) {
-            roleRepository.findByName(roleName).orElseGet(() -> roleRepository.save(new Role(null, roleName)));
-        }
-
         String email = adminEmail.trim().toLowerCase(Locale.ROOT);
         if (!userRepository.existsByEmailIgnoreCase(email)) {
             Role adminRole = roleRepository.findByName(RoleName.ADMIN).orElseThrow();
